@@ -1,34 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+
+function useAnimalSearch() {
+  const [animals, setAnimals] = useState([])
+
+  useEffect(() => {
+    const lastQuery = localStorage.getItem('lastQuery');
+    search(lastQuery);
+  }, [])
+
+  const search = async (q) => {
+    const response = await fetch('http://localhost:7070?' + new URLSearchParams({ q }));
+
+    const data = await response.json();
+    setAnimals(data);
+
+    localStorage.setItem('lastQuery', q);
+  }
+  return { animals, search }
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const { animals, search } = useAnimalSearch();
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
+    <main>
+      <h1>Animal Farm</h1>
+
+      <input type="text" placeholder="Search" onChange={(e) => search(e.target.value)} />
+      <ul>
+        {animals.map((animal) => (
+          <Animal key={animal.id} {...animal} />
+        ))}
+        {animals.length === 0 && "No animals found"}
+      </ul>
+    </main>
   )
 }
+
+
+function Animal({ type, name, age }) {
+  return <li>
+    <strong>{type}</strong>
+    {name} ({age} years old)
+  </li>
+};
 
 export default App
